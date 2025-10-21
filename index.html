@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auto Gamma - Podłoga Modułowa</title>
+  <style>
+    :root{
+      --tile: 28px;
+      --gap: 2px;
+      --bg: #0b1020;
+      --panel: #111936;
+      --accent: #7c9cff;
+      --muted: #cbd5e1;
+      --ring: rgba(124,156,255,.35);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, #141b34 0%, var(--bg) 60%), linear-gradient(180deg, #0a0f22 0%, #060913 100%);
+      color:#e5e7eb; display:flex; flex-direction:column;
+    }
+    header{
+      padding:20px clamp(16px, 5vw, 40px) 8px; position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(8px);
+      background:linear-gradient(180deg,rgba(10,15,34,.85),rgba(10,15,34,.55)); border-bottom:1px solid rgba(124,156,255,.15);
+    }
+    h1{font-size:clamp(18px, 2.2vw, 28px); margin:0 0 8px; font-weight:700; letter-spacing:.2px}
+    .sub{color:#94a3b8; font-size:14px}
+
+    .wrap{display:grid; grid-template-columns: 360px 1fr; gap:24px; padding:16px clamp(16px, 5vw, 40px) 120px;}
+    @media (max-width: 980px){ .wrap{grid-template-columns:1fr; padding-bottom:180px} }
+
+    .card{background:linear-gradient(180deg, rgba(17,25,54,.85), rgba(11,17,38,.85)); border:1px solid rgba(124,156,255,.18); border-radius:16px; padding:16px; box-shadow:var(--shadow)}
+    .card h2{margin:0 0 12px; font-size:16px; color:#e2e8f0}
+
+    .controls{display:grid; gap:14px}
+    .row{display:flex; gap:10px; align-items:center}
+    .row label{width:96px; color:#cbd5e1; font-size:14px}
+    .row input{flex:1; background:#0e152b; border:1px solid rgba(124,156,255,.25); color:#e5e7eb; padding:10px 12px; border-radius:10px; outline:none}
+    .row input:focus{border-color:var(--accent); box-shadow:0 0 0 4px var(--ring)}
+    .btn{appearance:none; border:1px solid rgba(124,156,255,.35); background:linear-gradient(180deg, #1b2550, #111936); color:#e5e7eb; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600}
+    .btn:hover{filter:brightness(1.08)}
+    .btn:active{transform:translateY(1px)}
+
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid rgba(124,156,255,.25); background:#0e152b; cursor:pointer; user-select:none}
+    .chip input{display:none}
+    .dot{width:18px; height:18px; border-radius:6px; border:1px solid rgba(255,255,255,.25)}
+    .chip.active{outline:2px solid var(--accent); box-shadow:0 0 0 4px var(--ring)}
+
+    .tools{display:flex; gap:8px}
+    .tool{padding:8px 10px; border-radius:10px; border:1px solid rgba(124,156,255,.25); background:#0e152b; cursor:pointer; font-weight:600}
+    .tool.active{outline:2px solid var(--accent); box-shadow:0 0 0 4px var(--ring)}
+
+    .gridWrap{overflow:auto; border-radius:16px; border:1px solid rgba(124,156,255,.18); background:#0b132b; box-shadow:var(--shadow)}
+    .grid{display:grid; gap:var(--gap); padding:var(--gap); width:max-content}
+    .tile{width:var(--tile); height:var(--tile); border-radius:6px; border:1px solid rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+    .tile:focus{outline:2px solid var(--accent)}
+
+    .dimNote{margin-top:8px; color:#9aa7bd; font-size:13px}
+
+    .summary{position:fixed; right:18px; bottom:18px; background:linear-gradient(180deg, #141c3f, #0f1734); border:1px solid rgba(124,156,255,.25); border-radius:14px; padding:14px 16px; min-width:260px; box-shadow:var(--shadow);}
+    .summary h3{margin:0 0 10px; font-size:14px; color:#cbd5e1}
+    .sumList{display:grid; gap:6px; font-size:14px}
+    .sumRow{display:flex; justify-content:space-between; gap:12px}
+    .total{margin-top:10px; padding-top:10px; border-top:1px dashed rgba(124,156,255,.35); display:flex; justify-content:space-between; align-items:center}
+    .price{font-weight:800; font-size:18px}
+
+    .legend{display:flex; gap:10px; align-items:center; color:#a5b4fc; font-size:13px; margin-top:8px}
+    .legend .sw{width:14px; height:14px; border-radius:4px; border:1px solid rgba(255,255,255,.25)}
+
+    .footer{position:fixed; left:0; right:0; bottom:0; padding:10px 16px; display:flex; justify-content:center;}
+    .tip{background:#0e152b; border:1px solid rgba(124,156,255,.2); color:#9fb0d0; padding:8px 12px; border-radius:10px; font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <center><img src="https://autogammasklep.pl/modules/tvcmsfooterlogo/views/img/Autogamma_logo_black_20230905131000.png" alt="logo" width="250" style="margin: -35px; margin-left: 150px;"></center>
+    <h1>Konfigurator podłogi modułowej 40×40 cm</h1>
+    <div class="sub">Wpisz wymiary pomieszczenia w metrach, a siatka zostanie automatycznie <strong>zaokrąglona w górę</strong> do płytek 40×40 cm.</div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>Ustawienia</h2>
+      <div class="controls">
+        <div class="row">
+          <label for="len">Długość (m)</label>
+          <input id="len" type="number" step="0.01" min="0.4" value="3">
+        </div>
+        <div class="row">
+          <label for="wid">Szerokość (m)</label>
+          <input id="wid" type="number" step="0.01" min="0.4" value="5">
+        </div>
+        <div class="row">
+          <button id="apply" class="btn">Zastosuj wymiary</button>
+          <button id="clear" class="btn" title="Wyczyść kolory i wypełnij kolorem domyślnym">Wyczyść</button>
+        </div>
+
+        <h2>Kolory</h2>
+        <div id="palette" class="chips"></div>
+        <div class="legend"><span class="sw" id="prev"></span> Aktualny kolor</div>
+
+        <h2>Narzędzia</h2>
+        <div class="tools">
+          <button class="tool active" data-tool="brush" title="Maluj pojedyncze płytki (przeciągaj myszą)">Pędzel</button>
+          <button class="tool" data-tool="fill" title="Wypełnij spójny obszar kolorem">Wypełnij</button>
+        </div>
+
+        <div class="dimNote" id="dimNote">—</div>
+      </div>
+    </section>
+
+    <section class="card gridWrap">
+      <div id="grid" class="grid" role="grid" aria-label="Siatka płytek"></div>
+    </section>
+  </main>
+
+  <aside class="summary" aria-live="polite">
+    <h3>Zużycie płytek</h3>
+    <div class="sumList" id="sumList"></div>
+    <div class="total">
+      <div>Razem: <strong id="totalCount">0</strong> szt.</div>
+      <div class="price" id="totalPrice">0,00 zł</div>
+    </div>
+  </aside>
+
+  <div class="footer"><div class="tip">Wskazówka: Trzymaj wciśnięty przycisk myszy, aby <strong>malować</strong> ciągiem. Użyj narzędzia <strong>Wypełnij</strong>, by szybko pokolorować obszar.</div></div>
+  <center><img src="https://autogammasklep.pl/modules/tvcmsfooterlogo/views/img/Autogamma_logo_black_20230905131000.png" alt="logo" width="500" style="margin-top: -70px; opacity: 25%;"></center>
+
+  <script>
+    const TILE_SIZE_M = 0.4; 
+    const PRICE_PER_TILE = 11.99; 
+
+    const COLORS = [
+      { id:'czarny',   name:'Czarny',   hex:'#111827' },
+      { id:'szary',    name:'Szary',    hex:'#9ca3af' },
+      { id:'biały',    name:'Biały',    hex:'#ffffff' },
+      { id:'niebieski',name:'Niebieski',hex:'#3b82f6' },
+      { id:'żółty',    name:'Żółty',    hex:'#fbbf24' },
+      { id:'zielony',  name:'Zielony',  hex:'#10b981' },
+      { id:'czerwony', name:'Czerwony', hex:'#ef4444' }
+    ];
+
+    const gridEl = document.getElementById('grid');
+    const paletteEl = document.getElementById('palette');
+    const prevSw = document.getElementById('prev');
+    const sumList = document.getElementById('sumList');
+    const totalCountEl = document.getElementById('totalCount');
+    const totalPriceEl = document.getElementById('totalPrice');
+    const dimNoteEl = document.getElementById('dimNote');
+
+    const lenInput = document.getElementById('len');
+    const widInput = document.getElementById('wid');
+    const applyBtn = document.getElementById('apply');
+    const clearBtn = document.getElementById('clear');
+
+    let selectedColor = COLORS[1]; 
+    let tool = 'brush';
+
+    let rows = 0, cols = 0;    
+    let data = [];             
+    let mouseDown = false;
+
+    function renderPalette(){
+      paletteEl.innerHTML = '';
+      COLORS.forEach((c, idx)=>{
+        const el = document.createElement('label');
+        el.className = 'chip' + (selectedColor.id===c.id ? ' active' : '');
+        el.innerHTML = `<span class="dot" style="background:${c.hex}"></span><span>${c.name}</span>`;
+        el.addEventListener('click', ()=>{
+          selectedColor = c;
+          document.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('active'));
+          el.classList.add('active');
+          prevSw.style.background = c.hex;
+        });
+        paletteEl.appendChild(el);
+      });
+      prevSw.style.background = selectedColor.hex;
+    }
+
+    document.querySelectorAll('.tool').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tool').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        tool = btn.dataset.tool;
+      });
+    });
+
+    function ceilTiles(meters){ return Math.ceil(meters / TILE_SIZE_M); }
+    function formatPLN(value){ return new Intl.NumberFormat('pl-PL', {style:'currency', currency:'PLN'}).format(value); }
+
+    function setDimensions(lenM, widM){
+      cols = ceilTiles(lenM);
+      rows = ceilTiles(widM);
+      const realLen = (cols * TILE_SIZE_M).toFixed(2);
+      const realWid = (rows * TILE_SIZE_M).toFixed(2);
+      dimNoteEl.innerHTML = `Wygenerowana podłoga: <strong>${realLen} m</strong> × <strong>${realWid} m</strong> (siatka: ${cols} × ${rows} płytek)`;
+      buildGrid();
+    }
+
+    function buildGrid(){
+      data = Array.from({length: rows}, ()=> Array.from({length: cols}, ()=> selectedColor.id));
+      gridEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
+      gridEl.innerHTML = '';
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          const tile = document.createElement('button');
+          tile.className = 'tile';
+          tile.setAttribute('aria-label', `Rząd ${r+1}, Kolumna ${c+1}`);
+          tile.dataset.r = r; tile.dataset.c = c;
+          applyTileColor(tile, data[r][c]);
+
+          tile.addEventListener('mousedown', (e)=>{ e.preventDefault(); mouseDown = true; onPaint(tile); });
+          tile.addEventListener('mouseover', ()=>{ if(mouseDown && tool==='brush') onPaint(tile); });
+          tile.addEventListener('click', ()=>{ if(tool==='fill') fillAt(tile); });
+
+          gridEl.appendChild(tile);
+        }
+      }
+      updateSummary();
+    }
+
+    function applyTileColor(tile, colorId){
+      const c = COLORS.find(x=>x.id===colorId) || selectedColor;
+      tile.style.background = c.hex;
+      tile.style.color = (colorId==='biały' || colorId==='żółty' || colorId==='szary')? '#111827' : '#fff';
+    }
+
+    function onPaint(tile){
+      const r = +tile.dataset.r, c = +tile.dataset.c;
+      if(tool==='brush'){
+        data[r][c] = selectedColor.id;
+        applyTileColor(tile, selectedColor.id);
+        updateSummary();
+      }
+    }
+
+    function fillAt(tile){
+      const r0 = +tile.dataset.r, c0 = +tile.dataset.c;
+      const target = data[r0][c0];
+      const rep = selectedColor.id;
+      if(target === rep) return;
+      const q = [[r0,c0]];
+      const seen = new Set([r0+','+c0]);
+      while(q.length){
+        const [r,c] = q.shift();
+        if(data[r][c] !== target) continue;
+        data[r][c] = rep;
+        const idx = r*cols + c;
+        applyTileColor(gridEl.children[idx], rep);
+        const neigh = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+        for(const [nr,nc] of neigh){
+          if(nr>=0 && nr<rows && nc>=0 && nc<cols){
+            const key = nr+','+nc;
+            if(!seen.has(key) && data[nr][nc]===target){ seen.add(key); q.push([nr,nc]); }
+          }
+        }
+      }
+      updateSummary();
+    }
+
+    function updateSummary(){
+      const counts = Object.fromEntries(COLORS.map(c=>[c.id,0]));
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) counts[data[r][c]]++;
+      sumList.innerHTML = '';
+      let total = 0;
+      COLORS.forEach(c=>{
+        const n = counts[c.id];
+        if(n>0){
+          const row = document.createElement('div'); row.className='sumRow';
+          row.innerHTML = `<span>${c.name}</span><strong>${n} szt.</strong>`;
+          sumList.appendChild(row);
+          total += n;
+        }
+      });
+      totalCountEl.textContent = total;
+      totalPriceEl.textContent = formatPLN(total * PRICE_PER_TILE);
+    }
+
+    document.addEventListener('mouseup', ()=> mouseDown=false);
+    document.addEventListener('mouseleave', ()=> mouseDown=false);
+
+    applyBtn.addEventListener('click', ()=>{
+      const L = Math.max(parseFloat(lenInput.value)||0.4, 0.4);
+      const W = Math.max(parseFloat(widInput.value)||0.4, 0.4);
+      setDimensions(L, W);
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ data[r][c]=selectedColor.id; }
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const idx = r*cols + c; applyTileColor(gridEl.children[idx], selectedColor.id);
+      }
+      updateSummary();
+    });
+
+    renderPalette();
+    setDimensions(parseFloat(lenInput.value), parseFloat(widInput.value));
+  </script>
+</body>
+</html>
