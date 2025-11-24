@@ -29,18 +29,19 @@
     h1{font-size:clamp(18px, 2.2vw, 28px); margin:0 0 8px; font-weight:700; letter-spacing:.2px}
     .sub{color:#94a3b8; font-size:14px}
 
-    .wrap{display:grid; grid-template-columns: 380px 1fr; gap:24px; padding:16px clamp(16px, 5vw, 40px) 120px;}
-    @media (max-width: 980px){ .wrap{grid-template-columns:1fr; padding-bottom:200px} }
+    .wrap{display:grid; grid-template-columns: 390px 1fr; gap:24px; padding:16px clamp(16px, 5vw, 40px) 120px;}
+    @media (max-width: 980px){ .wrap{grid-template-columns:1fr; padding-bottom:220px} }
 
     .card{background:linear-gradient(180deg, rgba(17,25,54,.85), rgba(11,17,38,.85)); border:1px solid rgba(124,156,255,.18); border-radius:16px; padding:16px; box-shadow:var(--shadow)}
     .card h2{margin:12px 0 12px; font-size:16px; color:#e2e8f0}
 
     .controls{display:grid; gap:14px}
-    .row{display:flex; gap:10px; align-items:center}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
     .row label{width:120px; color:#cbd5e1; font-size:14px}
-    .row input,.row select{flex:1; background:#0e152b; border:1px solid rgba(124,156,255,.25); color:#e5e7eb; padding:10px 12px; border-radius:10px; outline:none}
+    .row input,.row select{flex:1; min-width:0; background:#0e152b; border:1px solid rgba(124,156,255,.25); color:#e5e7eb; padding:10px 12px; border-radius:10px; outline:none}
     .row input:focus,.row select:focus{border-color:var(--accent); box-shadow:0 0 0 4px var(--ring)}
-    .btn{appearance:none; border:1px solid rgba(124,156,255,.35); background:linear-gradient(180deg, #1b2550, #111936); color:#e5e7eb; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600}
+    .btn{appearance:none; border:1px solid rgba(124,156,255,.35); background:linear-gradient(180deg, #1b2550, #111936); color:#e5e7eb; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600; white-space:nowrap}
+    .btn.small{padding:6px 10px; font-size:12px}
     .btn:hover{filter:brightness(1.08)}
     .btn:active{transform:translateY(1px)}
 
@@ -72,7 +73,7 @@
     .legend .sw{width:14px; height:14px; border-radius:4px; border:1px solid rgba(255,255,255,.25)}
 
     .footer{position:fixed; left:0; right:0; bottom:0; padding:10px 16px; display:flex; justify-content:center;}
-    .tip{background:#0e152b; border:1px solid rgba(124,156,255,.2); color:#9fb0d0; padding:8px 12px; border-radius:10px; font-size:13px}
+    .tip{background:#0e152b; border:1px solid rgba(124,156,255,.2); color:#9fb0d0; padding:8px 12px; border-radius:10px; font-size:13px; text-align:center}
   </style>
 </head>
 <body>
@@ -96,6 +97,7 @@
         <div class="row" style="gap:8px">
           <button id="apply" class="btn">Zastosuj wymiary</button>
           <button id="clear" class="btn" title="Wyczyść kolory i wypełnij kolorem domyślnym">Wyczyść</button>
+          <button id="undo" class="btn small" title="Cofnij (Ctrl+Z)">Cofnij</button>
         </div>
 
         <h2>Kolory</h2>
@@ -113,16 +115,35 @@
           <label>Szachownica</label>
           <select id="colA"></select>
           <select id="colB"></select>
+          <button id="applyChess" class="btn" title="Zastosuj naprzemienny wzór 2 kolorów">OK</button>
         </div>
-        <div class="row" style="gap:8px">
-          <button id="applyChess" class="btn" title="Zastosuj naprzemienny wzór 2 kolorów">Zastosuj szachownicę</button>
+        <div class="row">
+          <label for="patternType">Inne wzory</label>
+          <select id="patternType">
+            <option value="">— wybierz —</option>
+            <option value="border">Ramka zewnętrzna</option>
+            <option value="stripesH">Pasy poziome A/B</option>
+            <option value="stripesV">Pasy pionowe A/B</option>
+            <option value="carpet">"Dywan" w środku</option>
+          </select>
+          <button id="applyPattern" class="btn">Zastosuj</button>
         </div>
+        <div class="row">
+          <label>Ramka 2 przekątne</label>
+          <button id="frameBtn" class="btn" title="Kliknij 2 przeciwległe narożniki obszaru">Tryb ramki</button>
+        </div>
+        <small id="patternNote" style="display:block;margin-top:4px;color:#9aa7bd;font-size:12px;"></small>
 
         <h2>Eksport / Import</h2>
         <div class="row" style="gap:8px">
           <button id="exportJson" class="btn">Eksportuj JSON</button>
           <button id="importJsonBtn" class="btn">Wczytaj JSON</button>
           <input id="importJson" type="file" accept="application/json" style="display:none" />
+        </div>
+        <div class="row" style="gap:8px">
+          <label>Obraz / PDF</label>
+          <button id="exportPng" class="btn">PNG</button>
+          <button id="exportPdf" class="btn">PDF</button>
         </div>
 
         <div class="dimNote" id="dimNote">—</div>
@@ -143,14 +164,18 @@
     </div>
   </aside>
 
-  <div class="footer"><div class="tip">Wskazówka: trzymaj wciśnięty przycisk myszy, aby <strong>malować</strong> ciągiem. Użyj narzędzia <strong>Wypełnij</strong>, by szybko pokolorować obszar. Szachownica w zakładce „Wzory”.</div></div>
+  <div class="footer"><div class="tip">Malowanie: przytrzymaj mysz na Pędzlu. Cofanie: <strong>Cofnij</strong> lub <strong>Ctrl+Z</strong>. Ramka: włącz tryb ramki i kliknij dwa narożniki. PNG/PDF w sekcji „Eksport / Import”.</div></div>
 
-  <p><color="light gray">Ostatnia aktualizacja: 24.11.2025</color> * <br><color="white">Dodanie: <br>Możliwość ustawienia szachownicy,<br>Eksportowanie i importowanie gotowych projektów</color> </p>
+  <canvas id="exportCanvas" style="display:none"></canvas>
+
+  <!-- jsPDF do eksportu PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <script>
     // —— Konfiguracja ——
     const TILE_SIZE_M = 0.4; // 40 cm
     const PRICE_PER_TILE = 11.99; // PLN brutto
+    const UNDO_LIMIT = 50;
 
     const COLORS = [
       { id:'czarny',   name:'Czarny',   hex:'#111827' },
@@ -175,14 +200,23 @@
     const widInput = document.getElementById('wid');
     const applyBtn = document.getElementById('apply');
     const clearBtn = document.getElementById('clear');
+    const undoBtn = document.getElementById('undo');
 
     // Wzory & I/O
     const selA = document.getElementById('colA');
     const selB = document.getElementById('colB');
     const chessBtn = document.getElementById('applyChess');
-    const exportBtn = document.getElementById('exportJson');
-    const importBtn = document.getElementById('importJsonBtn');
+    const patternTypeSel = document.getElementById('patternType');
+    const patternApplyBtn = document.getElementById('applyPattern');
+    const frameBtn = document.getElementById('frameBtn');
+    const patternNote = document.getElementById('patternNote');
+
+    const exportJsonBtn = document.getElementById('exportJson');
+    const importJsonBtn = document.getElementById('importJsonBtn');
     const importInput = document.getElementById('importJson');
+    const exportPngBtn = document.getElementById('exportPng');
+    const exportPdfBtn = document.getElementById('exportPdf');
+    const exportCanvas = document.getElementById('exportCanvas');
 
     let selectedColor = COLORS[1]; // domyślnie szary
     let tool = 'brush';
@@ -190,6 +224,36 @@
     let rows = 0, cols = 0;    // rozmiar siatki w płytkach
     let data = [];             // 2D: [r][c] => id koloru
     let mouseDown = false;
+
+    // Undo / wzory
+    let undoStack = [];
+    let patternMode = 'none'; // 'none' | 'frame'
+    let framePoints = [];
+
+    // —— Undo ——
+    function pushUndo(){
+      if(rows === 0 || cols === 0 || !data.length) return;
+      const snapshot = {
+        rows,
+        cols,
+        data: data.map(row => row.slice())
+      };
+      undoStack.push(snapshot);
+      if(undoStack.length > UNDO_LIMIT) undoStack.shift();
+    }
+
+    function undo(){
+      if(!undoStack.length) return;
+      const snap = undoStack.pop();
+      rows = snap.rows;
+      cols = snap.cols;
+      data = snap.data.map(row => row.slice());
+      renderGridFromData();
+      const realLen = (cols * TILE_SIZE_M).toFixed(2);
+      const realWid = (rows * TILE_SIZE_M).toFixed(2);
+      dimNoteEl.innerHTML = `Cofnięto. Aktualna podłoga: <strong>${realLen} m</strong> × <strong>${realWid} m</strong> (siatka: ${cols} × ${rows} płytek)`;
+      updateSummary();
+    }
 
     // —— Inicjalizacja palety ——
     function renderPalette(){
@@ -229,6 +293,7 @@
     function formatPLN(value){ return new Intl.NumberFormat('pl-PL', {style:'currency', currency:'PLN'}).format(value); }
 
     function setDimensions(lenM, widM){
+      pushUndo();
       cols = ceilTiles(lenM);
       rows = ceilTiles(widM);
       const realLen = (cols * TILE_SIZE_M).toFixed(2);
@@ -240,25 +305,56 @@
     function buildGrid(){
       // przygotuj dane (wypełnij domyślnym kolorem)
       data = Array.from({length: rows}, ()=> Array.from({length: cols}, ()=> selectedColor.id));
-      // wyrenderuj
+      renderGridFromData();
+      updateSummary();
+    }
+
+    function createTileElement(r,c){
+      const tile = document.createElement('button');
+      tile.className = 'tile';
+      tile.setAttribute('aria-label', `Rząd ${r+1}, Kolumna ${c+1}`);
+      tile.dataset.r = r; tile.dataset.c = c;
+      applyTileColor(tile, data[r][c]);
+
+      tile.addEventListener('mousedown', (e)=>{
+        e.preventDefault();
+        if(tool==='brush' && patternMode==='none'){
+          pushUndo();
+          mouseDown = true;
+          onPaint(tile);
+        }
+      });
+
+      tile.addEventListener('mouseover', ()=>{
+        if(mouseDown && tool==='brush' && patternMode==='none') onPaint(tile);
+      });
+
+      tile.addEventListener('click', ()=>{
+        if(patternMode === 'frame'){
+          handleFrameClick(tile);
+          return;
+        }
+        if(tool==='fill'){
+          pushUndo();
+          fillAt(tile);
+        } else if(tool==='brush' && !mouseDown && patternMode==='none'){
+          // pojedyncze kliknięcie pędzlem
+          pushUndo();
+          onPaint(tile);
+        }
+      });
+
+      return tile;
+    }
+
+    function renderGridFromData(){
       gridEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
       gridEl.innerHTML = '';
       for(let r=0;r<rows;r++){
         for(let c=0;c<cols;c++){
-          const tile = document.createElement('button');
-          tile.className = 'tile';
-          tile.setAttribute('aria-label', `Rząd ${r+1}, Kolumna ${c+1}`);
-          tile.dataset.r = r; tile.dataset.c = c;
-          applyTileColor(tile, data[r][c]);
-
-          tile.addEventListener('mousedown', (e)=>{ e.preventDefault(); mouseDown = true; onPaint(tile); });
-          tile.addEventListener('mouseover', ()=>{ if(mouseDown && tool==='brush') onPaint(tile); });
-          tile.addEventListener('click', ()=>{ if(tool==='fill') fillAt(tile); });
-
-          gridEl.appendChild(tile);
+          gridEl.appendChild(createTileElement(r,c));
         }
       }
-      updateSummary();
     }
 
     function repaintAll(){
@@ -323,6 +419,87 @@
       updateSummary();
     }
 
+    // —— Inne wzory ——
+    function patternBorder(){
+      const colId = selectedColor.id;
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          if(r===0 || r===rows-1 || c===0 || c===cols-1){
+            data[r][c] = colId;
+          }
+        }
+      }
+    }
+
+    function patternStripesH(){
+      const a = selA.value, b = selB.value;
+      for(let r=0;r<rows;r++){
+        const colId = (r%2===0)?a:b;
+        for(let c=0;c<cols;c++) data[r][c] = colId;
+      }
+    }
+
+    function patternStripesV(){
+      const a = selA.value, b = selB.value;
+      for(let c=0;c<cols;c++){
+        const colId = (c%2===0)?a:b;
+        for(let r=0;r<rows;r++) data[r][c] = colId;
+      }
+    }
+
+    function patternCarpet(){
+      const borderColor = selectedColor.id; // ramka
+      const innerColor = selA.value;        // środek
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          if(r===0 || r===rows-1 || c===0 || c===cols-1){
+            data[r][c]=borderColor;
+          }else{
+            data[r][c]=innerColor;
+          }
+        }
+      }
+    }
+
+    // —— Ramka z 2 przekątnych ——
+    function startFrameMode(){
+      patternMode = 'frame';
+      framePoints = [];
+      patternNote.textContent = 'Tryb ramki: kliknij dwie przeciwległe płytki narożne wybranego obszaru.';
+    }
+
+    function handleFrameClick(tile){
+      const r = +tile.dataset.r, c = +tile.dataset.c;
+      framePoints.push({r,c});
+      if(framePoints.length === 1){
+        patternNote.textContent = 'Wybrano pierwszy narożnik. Kliknij drugi narożnik ramki.';
+      }
+      if(framePoints.length === 2){
+        const p1 = framePoints[0];
+        const p2 = framePoints[1];
+        framePoints = [];
+        patternMode = 'none';
+        patternNote.textContent = '';
+        pushUndo();
+        applyFrame(p1,p2);
+      }
+    }
+
+    function applyFrame(p1,p2){
+      const rMin = Math.min(p1.r,p2.r), rMax = Math.max(p1.r,p2.r);
+      const cMin = Math.min(p1.c,p2.c), cMax = Math.max(p1.c,p2.c);
+      const colId = selectedColor.id;
+      for(let r=rMin;r<=rMax;r++){
+        for(let c=cMin;c<=cMax;c++){
+          if(r===rMin || r===rMax || c===cMin || c===cMax){
+            data[r][c] = colId;
+          }
+        }
+      }
+      repaintAll();
+      updateSummary();
+    }
+
     // —— Podsumowanie ——
     function updateSummary(){
       const counts = Object.fromEntries(COLORS.map(c=>[c.id,0]));
@@ -342,7 +519,7 @@
       totalPriceEl.textContent = formatPLN(total * PRICE_PER_TILE);
     }
 
-    // —— Eksport / Import ——
+    // —— Eksport / Import JSON ——
     function exportJSON(){
       const payload = {
         version: 1,
@@ -366,31 +543,14 @@
         try{
           const obj = JSON.parse(e.target.result);
           if(!obj || !Array.isArray(obj.data) || typeof obj.rows!== 'number' || typeof obj.cols!=='number') throw new Error('Nieprawidłowy plik.');
+          pushUndo();
           rows = obj.rows; cols = obj.cols; data = obj.data;
           // walidacja kolorów
           const ids = new Set(COLORS.map(c=>c.id));
           for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(!ids.has(data[r][c])) data[r][c] = selectedColor.id;
 
-          // zbuduj siatkę i odmaluj
-          gridEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
-          gridEl.innerHTML = '';
-          for(let r=0;r<rows;r++){
-            for(let c=0;c<cols;c++){
-              const tile = document.createElement('button');
-              tile.className = 'tile';
-              tile.setAttribute('aria-label', `Rząd ${r+1}, Kolumna ${c+1}`);
-              tile.dataset.r = r; tile.dataset.c = c;
-              applyTileColor(tile, data[r][c]);
+          renderGridFromData();
 
-              tile.addEventListener('mousedown', (e)=>{ e.preventDefault(); mouseDown = true; onPaint(tile); });
-              tile.addEventListener('mouseover', ()=>{ if(mouseDown && tool==='brush') onPaint(tile); });
-              tile.addEventListener('click', ()=>{ if(tool==='fill') fillAt(tile); });
-
-              gridEl.appendChild(tile);
-            }
-          }
-
-          // uaktualnij opis wymiarów (metry przeliczymy z liczby płytek)
           const realLen = (cols * TILE_SIZE_M).toFixed(2);
           const realWid = (rows * TILE_SIZE_M).toFixed(2);
           dimNoteEl.innerHTML = `Wczytano projekt: <strong>${realLen} m</strong> × <strong>${realWid} m</strong> (siatka: ${cols} × ${rows} płytek)`;
@@ -403,9 +563,76 @@
       reader.readAsText(file);
     }
 
+    // —— Eksport PNG / PDF ——
+    function exportImageDataURL(){
+      if(cols === 0 || rows === 0) return null;
+      const tilePx = 40;
+      const margin = 2;
+      const w = cols*tilePx + margin*2;
+      const h = rows*tilePx + margin*2;
+      exportCanvas.width = w;
+      exportCanvas.height = h;
+      const ctx = exportCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,w,h);
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          const colorId = data[r][c];
+          const col = COLORS.find(x=>x.id===colorId);
+          ctx.fillStyle = col ? col.hex : '#000000';
+          const x = margin + c*tilePx;
+          const y = margin + r*tilePx;
+          ctx.fillRect(x,y,tilePx,tilePx);
+          ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+          ctx.strokeRect(x,y,tilePx,tilePx);
+        }
+      }
+      return exportCanvas.toDataURL('image/png');
+    }
+
+    function exportPNG(){
+      const url = exportImageDataURL();
+      if(!url) return;
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[-:]/g,'').slice(0,15);
+      a.download = `podloga_${cols}x${rows}_${ts}.png`;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function exportPDF(){
+      const dataUrl = exportImageDataURL();
+      if(!dataUrl) return;
+      if(!window.jspdf || !window.jspdf.jsPDF){
+        alert('Biblioteka jsPDF nie została załadowana. Możesz zapisać PNG i przekonwertować go na PDF w systemie.');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const margin = 10;
+      const maxWidth = pageWidth - margin*2;
+      const imgHeight = imgProps.height * maxWidth / imgProps.width;
+      const x = margin;
+      const y = Math.max(margin, (pageHeight - imgHeight) / 2);
+      pdf.addImage(dataUrl, 'PNG', x, y, maxWidth, imgHeight);
+      pdf.save(`podloga_${cols}x${rows}.pdf`);
+    }
+
     // —— Zdarzenia globalne ——
     document.addEventListener('mouseup', ()=> mouseDown=false);
     document.addEventListener('mouseleave', ()=> mouseDown=false);
+
+    document.addEventListener('keydown', (e)=>{
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='z'){
+        e.preventDefault();
+        undo();
+      }
+    });
 
     applyBtn.addEventListener('click', ()=>{
       const L = Math.max(parseFloat(lenInput.value)||0.4, 0.4);
@@ -414,26 +641,58 @@
     });
 
     clearBtn.addEventListener('click', ()=>{
-      // wypełnij całość bieżącym kolorem
+      pushUndo();
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ data[r][c]=selectedColor.id; }
       repaintAll();
       updateSummary();
     });
 
-    chessBtn.addEventListener('click', applyChess);
+    undoBtn.addEventListener('click', undo);
 
-    exportBtn.addEventListener('click', exportJSON);
+    chessBtn.addEventListener('click', ()=>{
+      pushUndo();
+      applyChess();
+    });
 
-    importBtn.addEventListener('click', ()=> importInput.click());
+    patternApplyBtn.addEventListener('click', ()=>{
+      const type = patternTypeSel.value;
+      if(!type) return;
+      pushUndo();
+      switch(type){
+        case 'border': patternBorder(); break;
+        case 'stripesH': patternStripesH(); break;
+        case 'stripesV': patternStripesV(); break;
+        case 'carpet': patternCarpet(); break;
+      }
+      repaintAll();
+      updateSummary();
+    });
+
+    frameBtn.addEventListener('click', startFrameMode);
+
+    exportJsonBtn.addEventListener('click', exportJSON);
+
+    importJsonBtn.addEventListener('click', ()=> importInput.click());
     importInput.addEventListener('change', ()=>{
       const [file] = importInput.files || [];
       if(file) importJSON(file);
       importInput.value = '';
     });
 
+    exportPngBtn.addEventListener('click', exportPNG);
+    exportPdfBtn.addEventListener('click', exportPDF);
+
     // —— Start ——
     renderPalette();
     setDimensions(parseFloat(lenInput.value), parseFloat(widInput.value));
   </script>
+  <section class="card" style="margin:40px auto; max-width:900px; background:rgba(17,25,54,0.75); border:1px solid rgba(124,156,255,0.25); padding:20px; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.35);">
+    <h2 style="margin-top:0; font-size:18px; color:#e2e8f0">Lista ostatnich aktualizacji</h2>
+    <ul style="list-style:none; padding-left:0; color:#cbd5e1; font-size:14px; line-height:1.55">
+      <li><strong>24.11.2025:</strong> Dodano cofanie (Ctrl+Z), eksport PNG/PDF, zaawansowane wzory (ramka 2 przekątne, dywan, pasy pionowe/poziome), limit 50 kroków historii, poprawiona logika siatki.</li>
+      <li><strong>23.11.2025:</strong> Dodano szachownicę (A/B), eksport i import JSON, wczytywanie wymiarów z projektu.</li>
+      <li><strong>22.11.2025:</strong> Pierwsza wersja konfiguratora – pędzel, fill, liczenie zużycia i kosztów, zmiana wymiarów oraz podstawowa paleta kolorów.</li>
+    </ul>
+  </section>
 </body>
 </html>
